@@ -62,7 +62,7 @@ class Application:
         self.main_frame.pack(side="right", fill="both", expand=True)
         self.main_frame.pack_propagate(False)
 
-        self.add_btn = tk.Button(self.side_frame, text="Add", command=self.create_add_ui)
+        self.add_btn = tk.Button(self.side_frame, text="Add", command=self.create_add_ui, state="active")
         self.add_btn.pack(side="bottom", pady=10)
 
         try:
@@ -75,8 +75,12 @@ class Application:
             tk.Label(self.main_frame, text="No saved passwords.").pack()
 
     def submit_func(self, v1, v2, v3):
-        with open("data", "a") as passwd_file:
-            passwd_file.write(f"{v1} {v2} {v3}\n")
+
+        if v1 == "" or v2 == "" or v3 == "":
+            mb.showerror("Error", "Please enter both values")
+        else:
+            with open("data", "a") as passwd_file:
+                passwd_file.write(f"{v1} {v2} {v3}\n")
 
         self.add_frame.destroy()
 
@@ -91,6 +95,8 @@ class Application:
 
         self.side_frame.config(width=100)
         self.main_frame.config(width=600)
+
+        self.add_btn.config(state="active")
 
     def create_add_ui(self):
         self.add_frame = tk.Frame(self.root, bg="green")
@@ -110,6 +116,8 @@ class Application:
 
         submit_btn = tk.Button(self.add_frame, text="Submit", command=lambda: self.submit_func(add_var1.get(), add_var2.get(), add_var3.get()))
         submit_btn.grid(row=3, column=1, pady=10)
+
+        self.add_btn.config(state="disabled")
 
 if __name__ == "__main__":
     root = tk.Tk()
