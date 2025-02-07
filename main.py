@@ -1,5 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from os import write
+from tkinter import ttk, messagebox
+from tkinter import messagebox as mb
 
 class Application:
     def __init__(self, root):
@@ -50,19 +52,45 @@ class Application:
         self.root.geometry("700x400")
 
         self.ui_frame = tk.Frame(self.root)
-        self.side_frame = tk.Frame(self.ui_frame, width=100, bg="red")
-        self.main_frame = tk.Frame(self.ui_frame, width=600, bg="pink")
-
         self.ui_frame.pack(side="top", fill="both", expand=True)
-        self.side_frame.pack(side="left", fill="both", expand=True)
+
+        self.side_frame = tk.Frame(self.ui_frame, width=100, bg="red")
+        self.side_frame.pack(side="left", fill="y")
+        self.side_frame.pack_propagate(False)
+
+        self.main_frame = tk.Frame(self.ui_frame, width=600, bg="pink")
         self.main_frame.pack(side="right", fill="both", expand=True)
+        self.main_frame.pack_propagate(False)
 
         self.add_btn = tk.Button(self.side_frame, text="Add", command=self.create_add_ui)
         self.add_btn.pack(side="bottom", pady=10)
 
+        try:
+            with open("data", "r") as self.passwd_file:
+                self.lines = self.passwd_file.readlines()
+
+            for line in self.lines:
+                tk.Label(self.main_frame, text=line.strip()).pack(pady=10, padx=10)
+        except FileNotFoundError:
+            tk.Label(self.main_frame, text="No saved passwords.").pack()
+
     def submit_func(self, v1, v2, v3):
-        label = tk.Label(self.main_frame, text=v1 + v2 + v3)
-        label.pack()
+        with open("data", "a") as passwd_file:
+            passwd_file.write(f"{v1} {v2} {v3}\n")
+
+        self.add_frame.destroy()
+
+        for widget in self.main_frame.winfo_children():
+            widget.destroy()
+
+        with open("data", "r") as passwd_file:
+            self.lines = passwd_file.readlines()
+
+        for line in self.lines:
+            tk.Label(self.main_frame, text=line.strip()).pack(padx=10, pady=5)
+
+        self.side_frame.config(width=100)
+        self.main_frame.config(width=600)
 
     def create_add_ui(self):
         self.add_frame = tk.Frame(self.root, bg="green")
