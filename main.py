@@ -28,7 +28,7 @@ class Application:
         self.entry1.pack()
         self.label2.pack()
         self.entry2.pack()
-        self.btn.pack()
+        self.btn.pack(pady=5)
         self.label_res.pack()
 
     def verify(self):
@@ -55,9 +55,8 @@ class Application:
         self.side_frame.pack(side="left", fill="y", padx=5)
         self.side_frame.pack_propagate(False)
 
-        self.main_frame = ctk.CTkFrame(self.ui_frame, width=600)
+        self.main_frame = ctk.CTkScrollableFrame(self.ui_frame, width=600)
         self.main_frame.pack(side="right", fill="both", expand=True)
-        self.main_frame.pack_propagate(False)
 
         icon_image = ctk.CTkImage(light_image=Image.open("plus.png"), size=(35, 35))
         self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50, command=self.create_add_ui)
@@ -68,18 +67,20 @@ class Application:
                 self.lines = self.passwd_file.readlines()
 
             for line in self.lines:
-                ctk.CTkLabel(self.main_frame, text=line.strip()).pack(pady=10, padx=10)
+                ctk.CTkLabel(self.main_frame, text=line.strip(), bg_color="pink",width=550, height=50).pack(pady=10, padx=10)
         except FileNotFoundError:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
     def submit_func(self, v1, v2, v3):
         if v1 == "" or v2 == "" or v3 == "":
             mb.showerror("Error", "Please enter all values")
-        else:
-            with open("data", "a") as passwd_file:
-                passwd_file.write(f"{v1} {v2} {v3}\n")
+            return
+
+        with open("data", "a") as passwd_file:
+            passwd_file.write(f"{v1} {v2} {v3}\n")
 
         self.add_frame.destroy()
+        self.add_btn.configure(state="normal")
 
         for widget in self.main_frame.winfo_children():
             widget.destroy()
@@ -88,9 +89,9 @@ class Application:
             self.lines = passwd_file.readlines()
 
         for line in self.lines:
-            ctk.CTkLabel(self.main_frame, text=line.strip()).pack(padx=10, pady=5)
+            ctk.CTkLabel(self.main_frame, text=line.strip(), width=550, height=50, bg_color="pink").pack(pady=10, padx=10)
 
-        self.add_btn.configure(state="normal")
+        self.main_frame.configure(width=600)
 
     def create_add_ui(self):
         self.add_frame = ctk.CTkFrame(self.root)
