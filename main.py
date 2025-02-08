@@ -90,8 +90,7 @@ class Application:
             file.writelines(self.lines)  # Nadpisz plik bez usuniętego wpisu
 
         # Odśwież UI
-        for widget in self.main_frame.winfo_children():
-            widget.destroy()
+        self.ui_frame.destroy()
         self.create_main_ui()
 
     def submit_func(self, v1, v2, v3):
@@ -108,11 +107,24 @@ class Application:
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
-        with open("data", "r") as passwd_file:
-            self.lines = passwd_file.readlines()
+        try:
+            with open("data", "r") as self.passwd_file:
+                self.lines = self.passwd_file.readlines()
 
-        for line in self.lines:
-            ctk.CTkLabel(self.main_frame, text=line.strip(), width=550, height=50, fg_color="#171717", text_color="white").pack(pady=7, padx=10)
+            for line in self.lines:
+                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
+                entry_frame.pack(pady=7, padx=10, fill="x")
+
+                label = ctk.CTkLabel(entry_frame, text=line.strip(), text_color="white", width=500, height=50)
+                label.pack(side="left", padx=10, pady=5, expand=True)
+
+                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="red",
+                                           command=lambda l=line: self.delete_entry(l))
+                delete_btn.pack(side="right", padx=10, pady=5)
+
+        except FileNotFoundError:
+            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
         self.main_frame.configure(width=600)
 
@@ -124,8 +136,8 @@ class Application:
         self.add_frame = ctk.CTkFrame(self.root)
         self.add_frame.pack(side="bottom", fill="both", pady=5, padx=5)
 
-        self.add_frame.grid_columnconfigure(0, weight=1)  # Kolumna etykiet
-        self.add_frame.grid_columnconfigure(1, weight=1)  # Kolumna pól tekstowych
+        self.add_frame.grid_columnconfigure(0, weight=1)
+        self.add_frame.grid_columnconfigure(1, weight=1)
 
         add_var1 = ctk.StringVar()
         add_var2 = ctk.StringVar()
@@ -135,7 +147,7 @@ class Application:
         ctk.CTkLabel(self.add_frame, text="Username").grid(row=1, column=0, sticky="e", padx=10, pady=5)
         ctk.CTkLabel(self.add_frame, text="Password").grid(row=2, column=0, sticky="e", padx=10, pady=5)
 
-        entry_width = 300  # Pola tekstowe 3x szersze
+        entry_width = 300
 
         ctk.CTkEntry(self.add_frame, textvariable=add_var1, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
         ctk.CTkEntry(self.add_frame, textvariable=add_var2, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
