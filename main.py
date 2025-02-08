@@ -16,6 +16,8 @@ class Application:
 
         self.create_login_ui()
 
+        ctk.set_appearance_mode("dark")
+
     def create_login_ui(self):
         self.label1 = ctk.CTkLabel(self.root, text="Username")
         self.label2 = ctk.CTkLabel(self.root, text="Password")
@@ -59,7 +61,8 @@ class Application:
         self.main_frame.pack(side="right", fill="both", expand=True)
 
         icon_image = ctk.CTkImage(light_image=Image.open("plus.png"), size=(35, 35))
-        self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50, command=self.create_add_ui)
+        self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50,
+                                     command=self.create_add_ui)
         self.add_btn.pack(side="top", pady=10)
 
         try:
@@ -67,9 +70,29 @@ class Application:
                 self.lines = self.passwd_file.readlines()
 
             for line in self.lines:
-                ctk.CTkLabel(self.main_frame, text=line.strip(), bg_color="pink",width=550, height=50).pack(pady=10, padx=10)
+                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
+                entry_frame.pack(pady=7, padx=10, fill="x")
+
+                label = ctk.CTkLabel(entry_frame, text=line.strip(), text_color="white", width=500, height=50)
+                label.pack(side="left", padx=10, pady=5, expand=True)
+
+                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="red",
+                                           command=lambda l=line: self.delete_entry(l))
+                delete_btn.pack(side="right", padx=10, pady=5)
+
         except FileNotFoundError:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+
+    def delete_entry(self, line):
+        self.lines.remove(line)  # Usuń linię z listy
+        with open("data", "w") as file:
+            file.writelines(self.lines)  # Nadpisz plik bez usuniętego wpisu
+
+        # Odśwież UI
+        for widget in self.main_frame.winfo_children():
+            widget.destroy()
+        self.create_main_ui()
 
     def submit_func(self, v1, v2, v3):
         if v1 == "" or v2 == "" or v3 == "":
@@ -89,29 +112,42 @@ class Application:
             self.lines = passwd_file.readlines()
 
         for line in self.lines:
-            ctk.CTkLabel(self.main_frame, text=line.strip(), width=550, height=50, bg_color="pink").pack(pady=10, padx=10)
+            ctk.CTkLabel(self.main_frame, text=line.strip(), width=550, height=50, fg_color="#171717", text_color="white").pack(pady=7, padx=10)
 
         self.main_frame.configure(width=600)
+
+    def cancel_func(self):
+        self.add_frame.destroy()
+        self.add_btn.configure(state="normal")
 
     def create_add_ui(self):
         self.add_frame = ctk.CTkFrame(self.root)
         self.add_frame.pack(side="bottom", fill="both", pady=5, padx=5)
 
+        self.add_frame.grid_columnconfigure(0, weight=1)  # Kolumna etykiet
+        self.add_frame.grid_columnconfigure(1, weight=1)  # Kolumna pól tekstowych
+
         add_var1 = ctk.StringVar()
         add_var2 = ctk.StringVar()
         add_var3 = ctk.StringVar()
 
-        ctk.CTkLabel(self.add_frame, text="Name").grid(row=0, column=0)
-        ctk.CTkLabel(self.add_frame, text="Username").grid(row=1, column=0)
-        ctk.CTkLabel(self.add_frame, text="Password").grid(row=2, column=0)
+        ctk.CTkLabel(self.add_frame, text="Name").grid(row=0, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Username").grid(row=1, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Password").grid(row=2, column=0, sticky="e", padx=10, pady=5)
 
-        ctk.CTkEntry(self.add_frame, textvariable=add_var1, width=65).grid(row=0, column=1)
-        ctk.CTkEntry(self.add_frame, textvariable=add_var2, width=65).grid(row=1, column=1)
-        ctk.CTkEntry(self.add_frame, textvariable=add_var3, width=65).grid(row=2, column=1)
+        entry_width = 300  # Pola tekstowe 3x szersze
+
+        ctk.CTkEntry(self.add_frame, textvariable=add_var1, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var2, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var3, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
 
         submit_btn = ctk.CTkButton(self.add_frame, text="Submit",
                                    command=lambda: self.submit_func(add_var1.get(), add_var2.get(), add_var3.get()))
-        submit_btn.grid(row=3, column=1, pady=10)
+        submit_btn.grid(row=3, column=1, pady=10, sticky="w")
+
+        cancel_btn = ctk.CTkButton(self.add_frame, text="cancel",
+                                   command=self.cancel_func)
+        cancel_btn.grid(row=3, column=1, pady=10)
 
         self.add_btn.configure(state="disabled")
 
