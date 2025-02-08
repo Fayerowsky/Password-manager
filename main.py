@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox as mb
-from PIL import Image, ImageTk
+from PIL import Image
 
 
 class Application:
@@ -85,11 +85,10 @@ class Application:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
     def delete_entry(self, line):
-        self.lines.remove(line)  # Usuń linię z listy
+        self.lines.remove(line)
         with open("data", "w") as file:
-            file.writelines(self.lines)  # Nadpisz plik bez usuniętego wpisu
+            file.writelines(self.lines)
 
-        # Odśwież UI
         self.ui_frame.destroy()
         self.create_main_ui()
 
