@@ -65,7 +65,7 @@ class Application:
                 label.pack(side="left", padx=10, pady=5, expand=True)
 
                 delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
-                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="red",
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="transparent",
                                            command=lambda l=line: self.delete_entry(l))
                 delete_btn.pack(side="right", padx=10, pady=5)
 
@@ -87,7 +87,7 @@ class Application:
 
         icon_image = ctk.CTkImage(light_image=Image.open("plus.png"), size=(35, 35))
         self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50,
-                                     command=self.create_add_ui)
+                                     command=self.create_add_ui, fg_color="transparent")
         self.add_btn.pack(side="top", pady=10)
 
         self.create_main_rows()
