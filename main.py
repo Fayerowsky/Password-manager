@@ -48,30 +48,32 @@ class Application:
             widget.destroy()
 
     def create_main_rows(self):
-
         try:
             with open("data", "r") as self.passwd_file:
                 self.lines = self.passwd_file.readlines()
 
-                contents = open("data", "r").read()
-                if not contents:
-                    ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+            contents = open("data", "r").read()
+            if not contents:
+                ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
             for line in self.lines:
                 entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
                 entry_frame.pack(pady=7, padx=10, fill="x")
 
-                label = ctk.CTkLabel(entry_frame, text=line.strip(), text_color="white", width=500, height=50)
-                label.pack(side="left", padx=10, pady=5, expand=True)
+                entry = ctk.CTkEntry(entry_frame, font=("Arial", 16), text_color="white", width=500, height=50,
+                                     justify="left", state="normal", border_width=0, fg_color="transparent")
+                entry.insert(0, line.strip())  # Wstawienie tekstu
+                entry.configure(state="readonly")  # Zablokowanie edycji, ale umożliwienie zaznaczania
+                entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
 
                 delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
-                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="transparent",
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
+                                           fg_color="transparent",
                                            command=lambda l=line: self.delete_entry(l))
                 delete_btn.pack(side="right", padx=10, pady=5)
 
         except FileNotFoundError:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
-
     def create_main_ui(self):
         self.root.geometry("700x400")
 
