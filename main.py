@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox as mb
 from PIL import Image
 
-
+##dodaje fajny cichy test
 class Application:
     def __init__(self, root):
         self.root = root
