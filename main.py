@@ -62,8 +62,8 @@ class Application:
 
                 entry = ctk.CTkEntry(entry_frame, font=("Arial", 16), text_color="white", width=500, height=50,
                                      justify="left", state="normal", border_width=0, fg_color="transparent")
-                entry.insert(0, line.strip())  # Wstawienie tekstu
-                entry.configure(state="readonly")  # Zablokowanie edycji, ale umożliwienie zaznaczania
+                entry.insert(0, line.strip())
+                entry.configure(state="readonly")
                 entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
 
                 delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
