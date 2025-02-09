@@ -47,34 +47,6 @@ class Application:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    def create_main_rows(self):
-        try:
-            with open("data", "r") as self.passwd_file:
-                self.lines = self.passwd_file.readlines()
-
-            contents = open("data", "r").read()
-            if not contents:
-                ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
-
-            for line in self.lines:
-                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
-                entry_frame.pack(pady=7, padx=10, fill="x")
-
-                entry = ctk.CTkEntry(entry_frame, font=("Arial", 16), text_color="white", width=500, height=50,
-                                     justify="left", state="normal", border_width=0, fg_color="transparent")
-                entry.insert(0, line.strip())
-                entry.configure(state="readonly")
-                entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
-
-                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
-                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
-                                           fg_color="transparent",
-                                           command=lambda l=line: self.delete_entry(l))
-                delete_btn.pack(side="right", padx=10, pady=5)
-
-        except FileNotFoundError:
-            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
-
     def create_main_ui(self):
         self.root.geometry("700x400")
 
@@ -90,10 +62,27 @@ class Application:
 
         icon_image = ctk.CTkImage(light_image=Image.open("plus.png"), size=(35, 35))
         self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50,
-                                     command=self.create_add_ui, fg_color="transparent")
+                                     command=self.create_add_ui)
         self.add_btn.pack(side="top", pady=10)
 
-        self.create_main_rows()
+        try:
+            with open("data", "r") as self.passwd_file:
+                self.lines = self.passwd_file.readlines()
+
+            for line in self.lines:
+                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
+                entry_frame.pack(pady=7, padx=10, fill="x")
+
+                label = ctk.CTkLabel(entry_frame, text=line.strip(), text_color="white", width=500, height=50)
+                label.pack(side="left", padx=10, pady=5, expand=True)
+
+                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="red",
+                                           command=lambda l=line: self.delete_entry(l))
+                delete_btn.pack(side="right", padx=10, pady=5)
+
+        except FileNotFoundError:
+            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
     def delete_entry(self, line):
         self.lines.remove(line)
@@ -117,7 +106,25 @@ class Application:
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
-        self.create_main_rows()
+        try:
+            with open("data", "r") as self.passwd_file:
+                self.lines = self.passwd_file.readlines()
+
+            for line in self.lines:
+                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
+                entry_frame.pack(pady=7, padx=10, fill="x")
+
+                label = ctk.CTkLabel(entry_frame, text=line.strip(), text_color="white", width=500, height=50)
+                label.pack(side="left", padx=10, pady=5, expand=True)
+
+                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40, fg_color="red",
+                                           command=lambda l=line: self.delete_entry(l))
+                delete_btn.pack(side="right", padx=10, pady=5)
+
+        except FileNotFoundError:
+            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+
         self.main_frame.configure(width=600)
 
     def cancel_func(self):
