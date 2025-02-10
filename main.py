@@ -1,8 +1,10 @@
 import customtkinter as ctk
 from tkinter import messagebox as mb
 from PIL import Image
+from tkinter import filedialog
+import os
+import atexit
 
-##dodaje fajny cichy test
 class Application:
     def __init__(self, root):
         self.root = root
@@ -17,13 +19,20 @@ class Application:
         self.create_login_ui()
 
         ctk.set_appearance_mode("dark")
+#session information
+    def session_open(self):
+        self.pass_file = open("data/session.txt", "r").read()
 
+    def session_close(self):
+        open("data/session.txt", "w").write(self.pass_file)
+        print("Session saved")
+#login UI & service
     def create_login_ui(self):
         self.label1 = ctk.CTkLabel(self.root, text="Username")
         self.label2 = ctk.CTkLabel(self.root, text="Password")
         self.entry1 = ctk.CTkEntry(self.root)
         self.entry2 = ctk.CTkEntry(self.root, show="*")
-        self.btn = ctk.CTkButton(self.root, text="Login", command=self.verify)
+        self.btn = ctk.CTkButton(self.root, text="Login", command=self.login_verify)
         self.label_res = ctk.CTkLabel(self.root, text="")
 
         self.label1.pack()
@@ -32,8 +41,10 @@ class Application:
         self.entry2.pack()
         self.btn.pack(pady=5)
         self.label_res.pack()
+        self.pass_file = "data/data.txt"
+        self.session_open()
 
-    def verify(self):
+    def login_verify(self):
         var1 = self.entry1.get()
         var2 = self.entry2.get()
 
@@ -46,34 +57,7 @@ class Application:
     def clear_login_ui(self):
         for widget in self.root.winfo_children():
             widget.destroy()
-
-    def create_main_rows(self):
-        try:
-            with open("data", "r") as self.passwd_file:
-                self.lines = self.passwd_file.readlines()
-
-            contents = open("data", "r").read()
-            if not contents:
-                ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
-
-            for line in self.lines:
-                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
-                entry_frame.pack(pady=7, padx=10, fill="x")
-
-                entry = ctk.CTkEntry(entry_frame, font=("Arial", 16), text_color="white", width=500, height=50,
-                                     justify="left", state="normal", border_width=0, fg_color="transparent")
-                entry.insert(0, line.strip())
-                entry.configure(state="readonly")
-                entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
-
-                delete_icon = ctk.CTkImage(light_image=Image.open("delete.png"), size=(25, 25))
-                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
-                                           fg_color="transparent",
-                                           command=lambda l=line: self.delete_entry(l))
-                delete_btn.pack(side="right", padx=10, pady=5)
-
-        except FileNotFoundError:
-            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+#main_app UI
     def create_main_ui(self):
         self.root.geometry("700x400")
 
@@ -87,42 +71,48 @@ class Application:
         self.main_frame = ctk.CTkScrollableFrame(self.ui_frame, width=600)
         self.main_frame.pack(side="right", fill="both", expand=True)
 
-        icon_image = ctk.CTkImage(light_image=Image.open("plus.png"), size=(35, 35))
+        icon_image = ctk.CTkImage(light_image=Image.open("image_files/add.png"), size=(35, 35))
         self.add_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image, width=50, height=50,
                                      command=self.create_add_ui, fg_color="transparent")
         self.add_btn.pack(side="top", pady=10)
+        icon_image2 = ctk.CTkImage(light_image=Image.open("image_files/path.png"), size=(35, 35))
+        self.path_btn = ctk.CTkButton(self.side_frame, text="", image=icon_image2, width=50, height=50,
+                                     command=self.path_select, fg_color="transparent")
+        self.path_btn.pack(side="top", pady=10)
 
-        self.create_main_rows()
+        if os.path.isfile(self.pass_file):
+            self.create_main_ui_rows()
+        else:
+            ctk.CTkLabel(self.main_frame, text="No saved passwords, pick a file containing password data.").pack()
 
-    def delete_entry(self, line):
-        self.lines.remove(line)
-        with open("data", "w") as file:
-            file.writelines(self.lines)
+    def create_main_ui_rows(self):
+        try:
+            with open(self.pass_file, "r") as self.passwd_file:
+                self.lines = self.passwd_file.readlines()
 
-        self.ui_frame.destroy()
-        self.create_main_ui()
+            contents = open(self.pass_file, "r").read()
+            if not contents:
+                ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
-    def submit_func(self, v1, v2, v3):
-        if v1 == "" or v2 == "" or v3 == "":
-            mb.showerror("Error", "Please enter all values")
-            return
+            for line in self.lines:
+                entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
+                entry_frame.pack(pady=7, padx=10, fill="x")
 
-        with open("data", "a") as passwd_file:
-            passwd_file.write(f"{v1} {v2} {v3}\n")
+                entry = ctk.CTkEntry(entry_frame, font=("Arial", 16), text_color="white", width=500, height=50,
+                                     justify="left", state="normal", border_width=0, fg_color="transparent")
+                entry.insert(0, line.strip())
+                entry.configure(state="readonly")
+                entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
 
-        self.add_frame.destroy()
-        self.add_btn.configure(state="normal")
+                delete_icon = ctk.CTkImage(light_image=Image.open("image_files/delete.png"), size=(25, 25))
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
+                                           fg_color="transparent",
+                                           command=lambda l=line: self.delete_add_ui(l))
+                delete_btn.pack(side="right", padx=10, pady=5)
 
-        for widget in self.main_frame.winfo_children():
-            widget.destroy()
-
-        self.create_main_rows()
-        self.main_frame.configure(width=600)
-
-    def cancel_func(self):
-        self.add_frame.destroy()
-        self.add_btn.configure(state="normal")
-
+        except FileNotFoundError:
+            ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+#add_UI & service
     def create_add_ui(self):
         self.add_frame = ctk.CTkFrame(self.root)
         self.add_frame.pack(side="bottom", fill="both", pady=5, padx=5)
@@ -145,17 +135,54 @@ class Application:
         ctk.CTkEntry(self.add_frame, textvariable=add_var3, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
 
         submit_btn = ctk.CTkButton(self.add_frame, text="Submit",
-                                   command=lambda: self.submit_func(add_var1.get(), add_var2.get(), add_var3.get()))
+                                   command=lambda: self.submit_add_ui(add_var1.get(), add_var2.get(), add_var3.get()))
         submit_btn.grid(row=3, column=1, pady=10, sticky="w")
 
         cancel_btn = ctk.CTkButton(self.add_frame, text="cancel",
-                                   command=self.cancel_func)
+                                   command=self.cancel_add_ui)
         cancel_btn.grid(row=3, column=1, pady=10)
 
         self.add_btn.configure(state="disabled")
 
+    def delete_add_ui(self, line):
+        self.lines.remove(line)
+        with open(self.pass_file, "w") as file:
+            file.writelines(self.lines)
+
+        self.ui_frame.destroy()
+        self.create_main_ui()
+
+    def submit_add_ui(self, v1, v2, v3):
+        if v1 == "" or v2 == "" or v3 == "":
+            mb.showerror("Error", "Please enter all values")
+            return
+
+        with open(self.pass_file, "a") as passwd_file:
+            passwd_file.write(f"{v1} {v2} {v3}\n")
+
+        self.add_frame.destroy()
+        self.add_btn.configure(state="normal")
+
+        for widget in self.main_frame.winfo_children():
+            widget.destroy()
+
+        self.create_main_ui_rows()
+        self.main_frame.configure(width=600)
+
+    def cancel_add_ui(self):
+        self.add_frame.destroy()
+        self.add_btn.configure(state="normal")
+#path_selection
+    def path_select(self):
+        self.pass_file = filedialog.askopenfilename(initialdir = "/", title = "Select a File",
+                                          filetypes = (("Text files","*.txt*"), ("all files", "*.*")))
+
+        self.path = self.pass_file
+        self.ui_frame.destroy()
+        self.create_main_ui()
 
 if __name__ == "__main__":
     root = ctk.CTk()
     app = Application(root)
+    atexit.register(app.session_close)
     root.mainloop()
