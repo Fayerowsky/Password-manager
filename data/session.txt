@@ -1,1 +1,1 @@
-C:/Users/micha/Desktop/testowy.txt
+C:/Users/micha/Documents/GitHub/password_manager/data/data.txt
