@@ -6,8 +6,7 @@ import os
 import atexit
 
 #add register on first run
-#add simple pass_coding  /ɖ/
-#add expand desc with title
+#add simple pass_coding
 
 class Application:
     def __init__(self, root):
@@ -64,7 +63,7 @@ class Application:
             widget.destroy()
 #main_app UI
     def create_main_ui(self):
-        self.root.geometry("700x400")
+        self.root.geometry("700x430")
 
         self.ui_frame = ctk.CTkFrame(self.root)
         self.ui_frame.pack(side="top", fill="both", expand=True)
@@ -99,45 +98,75 @@ class Application:
             if not contents:
                 ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
+            self.entries = {}
+
             for line in self.lines:
                 entry_frame = ctk.CTkFrame(self.main_frame, fg_color="#171717", corner_radius=5)
                 entry_frame.pack(pady=7, padx=10, fill="x")
 
-                slash_count = line.count(" / ")
+                slash_count = line.count(" // ")
 
-                height = 88 if slash_count == 3 else 53
+                min_height = 15
+                max_height = 106 if slash_count == 4 else 73
 
-                entry = ctk.CTkTextbox(entry_frame, font=("Arial", 16), text_color="white", width=400,
-                                       height=height, border_width=0, fg_color="transparent")
-                entry.insert("0.0", line.strip().replace(" / ", "\n"))
-                entry.configure(state="normal")
-                entry.tag_add("readonly", "0.0", "end")
-                entry.tag_config("readonly", foreground="white")
+                entry = ctk.CTkTextbox(entry_frame, font=("Arial", 16), text_color="white", width=375,
+                                       height=min_height, border_width=0, fg_color="transparent", yscrollcommand="", wrap=None)
+                entry.insert("0.0", line.strip().replace(" // ", "\n"))
                 entry.configure(state="disabled")
                 entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
 
                 delete_icon = ctk.CTkImage(light_image=Image.open("image_files/delete.png"), size=(25, 25))
-                self.delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
+                delete_btn = ctk.CTkButton(entry_frame, text="", image=delete_icon, width=40, height=40,
                                            fg_color="transparent",
                                            command=lambda l=line: self.delete_main_ui_rows(l))
-                self.delete_btn.pack(side="right", padx=5, pady=5)
+                delete_btn.pack(side="right", padx=5, pady=5)
 
                 modify_icon = ctk.CTkImage(light_image=Image.open("image_files/modify.png"), size=(25, 25))
-                self.modify_btn = ctk.CTkButton(entry_frame, text="", image=modify_icon, width=40, height=40,
+                modify_btn = ctk.CTkButton(entry_frame, text="", image=modify_icon, width=40, height=40,
                                            fg_color="transparent",
                                            command=lambda l=line, sc=slash_count: self.create_modify_ui(l.strip(), sc))
-                self.modify_btn.pack(side="right", padx=5, pady=5)
+                modify_btn.pack(side="right", padx=5, pady=5)
 
                 add_more_icon = ctk.CTkImage(light_image=Image.open("image_files/add_more.png"), size=(25, 25))
-                self.add_more_btn = ctk.CTkButton(entry_frame, text="", image=add_more_icon, width=40, height=40,
-                                           fg_color="transparent",
-                                           command=lambda l=line: self.create_add_more_ui(l.strip()))
-                self.add_more_btn.pack(side="right", padx=5, pady=5)
+                add_more_btn = ctk.CTkButton(entry_frame, text="", image=add_more_icon, width=40, height=40,
+                                             fg_color="transparent",
+                                             command=lambda l=line: self.create_add_more_ui(l.strip()))
+                add_more_btn.pack(side="right", padx=5, pady=5)
 
-                self.add_more_btn.configure(state="disabled") if slash_count == 3 else self.add_more_btn.configure(state="normal")
+                expand_icon = ctk.CTkImage(light_image=Image.open("image_files/expand.png"), size=(25, 25))
+                expand_btn = ctk.CTkButton(entry_frame, text="", image=expand_icon, width=40, height=40,
+                                           fg_color="transparent",
+                                           command=lambda f=entry_frame, e=entry, mh=min_height,
+                                                          mxh=max_height: self.toggle_expand(f, e, mh, mxh))
+                expand_btn.pack(side="right", padx=5, pady=5)
+
+                self.entries[entry_frame] = {"expanded": False, "min_h": min_height, "max_h": max_height}
+
+                add_more_btn.configure(state="disabled") if slash_count == 4 else add_more_btn.configure(state="normal")
 
         except FileNotFoundError:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
+
+    def toggle_expand(self, frame, entry, min_h, max_h):
+        expanded = self.entries[frame]["expanded"]
+        if expanded:
+            target_height = min_h
+        else:
+            target_height = max_h
+        self.animate_height(frame, entry, frame.winfo_height(), target_height)
+        self.entries[frame]["expanded"] = not expanded
+
+    def animate_height(self, frame, entry, current, target, step=5):
+        if current < target:
+            new_height = min(current + step, target)
+        else:
+            new_height = max(current - step, target)
+
+        frame.configure(height=new_height)
+        entry.configure(height=new_height)
+
+        if new_height != target:
+            frame.after(10, lambda: self.animate_height(frame, entry, new_height, target))
 
     def delete_main_ui_rows(self, line):
         self.lines.remove(line)
@@ -154,38 +183,41 @@ class Application:
         self.add_frame.grid_columnconfigure(0, weight=1)
         self.add_frame.grid_columnconfigure(1, weight=1)
 
+        add_var0 = ctk.StringVar()
         add_var1 = ctk.StringVar()
         add_var2 = ctk.StringVar()
         add_var3 = ctk.StringVar()
 
         ctk.CTkLabel(self.add_frame, text="Name").grid(row=0, column=0, sticky="e", padx=10, pady=5)
-        ctk.CTkLabel(self.add_frame, text="Username").grid(row=1, column=0, sticky="e", padx=10, pady=5)
-        ctk.CTkLabel(self.add_frame, text="Password").grid(row=2, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Platform").grid(row=1, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Username").grid(row=2, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Password").grid(row=3, column=0, sticky="e", padx=10, pady=5)
 
         entry_width = 300
 
-        ctk.CTkEntry(self.add_frame, textvariable=add_var1, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
-        ctk.CTkEntry(self.add_frame, textvariable=add_var2, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
-        ctk.CTkEntry(self.add_frame, textvariable=add_var3, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var0, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var1, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var2, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        ctk.CTkEntry(self.add_frame, textvariable=add_var3, width=entry_width).grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
         submit_btn = ctk.CTkButton(self.add_frame, text="Submit",
-                                   command=lambda: self.submit_add_ui(add_var1.get(), add_var2.get(),
+                                   command=lambda: self.submit_add_ui(add_var0.get(), add_var1.get(), add_var2.get(),
                                                                          add_var3.get()))
-        submit_btn.grid(row=3, column=1, pady=10, sticky="w")
+        submit_btn.grid(row=4, column=1, pady=10, sticky="w")
 
         cancel_btn = ctk.CTkButton(self.add_frame, text="cancel",
                                    command=self.cancel_modify_ui)
-        cancel_btn.grid(row=3, column=1, pady=10)
+        cancel_btn.grid(row=4, column=1, pady=10)
 
         self.add_btn.configure(state="disabled")
 
-    def submit_add_ui(self, v1, v2, v3):
-        if v1 == "" or v2 == "" or v3 == "":
+    def submit_add_ui(self, v0, v1, v2, v3):
+        if v0 == "" or v1 == "" or v2 == "" or v3 == "":
             mb.showerror("Error", "Please enter all values")
             return
 
         with open(self.pass_file, "a") as passwd_file:
-            passwd_file.write(f"{v1} / {v2} {v3}\n")
+            passwd_file.write(f"{v0} // {v1} // {v2} {v3}\n")
 
         self.add_frame.destroy()
         self.add_btn.configure(state="normal")
@@ -202,7 +234,7 @@ class Application:
 #modify_ui & service
     def create_modify_ui(self, old_line, l):
         print(l)
-        if l == 1:
+        if l == 2:
             self.old_line = old_line
             self.add_frame = ctk.CTkFrame(self.root)
             self.add_frame.pack(side="bottom", fill="both", pady=5, padx=5)
@@ -210,32 +242,36 @@ class Application:
             self.add_frame.grid_columnconfigure(0, weight=1)
             self.add_frame.grid_columnconfigure(1, weight=1)
 
-            add_svar1 = ctk.StringVar(value=old_line.split()[0] if old_line else "")
-            add_svar2 = ctk.StringVar(value=old_line.split()[2] if len(old_line.split()) > 1 else "")
-            add_svar3 = ctk.StringVar(value=old_line.split()[3] if len(old_line.split()) > 2 else "")
+            add_svar0 = ctk.StringVar()
+            add_svar0 = ctk.StringVar(value=old_line.split()[0] if old_line else "")
+            add_svar1 = ctk.StringVar(value=old_line.split()[2] if len(old_line.split()) > 1 else "")
+            add_svar2 = ctk.StringVar(value=old_line.split()[4] if len(old_line.split()) > 1 else "")
+            add_svar3 = ctk.StringVar(value=old_line.split()[5] if len(old_line.split()) > 2 else "")
             add_svar4 = ""
             add_svar5 = ""
             add_svar6 = ""
 
             ctk.CTkLabel(self.add_frame, text="New name").grid(row=0, column=0, sticky="e", padx=10, pady=5)
-            ctk.CTkLabel(self.add_frame, text="New username").grid(row=1, column=0, sticky="e", padx=10, pady=5)
-            ctk.CTkLabel(self.add_frame, text="New password").grid(row=2, column=0, sticky="e", padx=10, pady=5)
+            ctk.CTkLabel(self.add_frame, text="New platform").grid(row=1, column=0, sticky="e", padx=10, pady=5)
+            ctk.CTkLabel(self.add_frame, text="New username").grid(row=2, column=0, sticky="e", padx=10, pady=5)
+            ctk.CTkLabel(self.add_frame, text="New password").grid(row=3, column=0, sticky="e", padx=10, pady=5)
 
             entry_width = 300
 
-            ctk.CTkEntry(self.add_frame, textvariable=add_svar1, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
-            ctk.CTkEntry(self.add_frame, textvariable=add_svar2, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
-            ctk.CTkEntry(self.add_frame, textvariable=add_svar3, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
+            ctk.CTkEntry(self.add_frame, textvariable=add_svar0, width=entry_width).grid(row=0, column=1, padx=5, pady=5, sticky="w")
+            ctk.CTkEntry(self.add_frame, textvariable=add_svar1, width=entry_width).grid(row=1, column=1, padx=5, pady=5, sticky="w")
+            ctk.CTkEntry(self.add_frame, textvariable=add_svar2, width=entry_width).grid(row=2, column=1, padx=5, pady=5, sticky="w")
+            ctk.CTkEntry(self.add_frame, textvariable=add_svar3, width=entry_width).grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
             submit_btn = ctk.CTkButton(self.add_frame, text="Submit",
-                                   command=lambda: self.submit_modify_ui(add_svar1.get(), add_svar2.get(), add_svar3.get(), add_svar4, add_svar5, add_svar6))
-            submit_btn.grid(row=3, column=1, pady=10, sticky="w")
+                                   command=lambda: self.submit_modify_ui(add_svar0.get(), add_svar1.get(), add_svar2.get(), add_svar3.get(), add_svar4, add_svar5, add_svar6))
+            submit_btn.grid(row=4, column=1, pady=10, sticky="w")
 
             cancel_btn = ctk.CTkButton(self.add_frame, text="Cancel",
                                    command=self.cancel_modify_ui)
-            cancel_btn.grid(row=3, column=1, pady=10)
+            cancel_btn.grid(row=4, column=1, pady=10)
 
-        elif l == 3:
+        elif l == 4:
             self.old_line = old_line
             self.add_frame = ctk.CTkFrame(self.root)
             self.add_frame.pack(side="bottom", fill="both", pady=5, padx=5)
@@ -243,21 +279,23 @@ class Application:
             self.add_frame.grid_columnconfigure(0, weight=1)
             self.add_frame.grid_columnconfigure(1, weight=1)
             self.add_frame.grid_columnconfigure(2, weight=1)
+            self.add_frame.grid_columnconfigure(3, weight=1)
 
             split_line = old_line.split() if old_line else []
-            add_svar1 = ctk.StringVar(value=split_line[0] if len(split_line) > 0 else "")
-            add_svar2 = ctk.StringVar(value=split_line[2] if len(split_line) > 1 else "")
-            add_svar3 = ctk.StringVar(value=split_line[3] if len(split_line) > 2 else "")
-            add_svar4 = ctk.StringVar(value=split_line[5] if len(split_line) > 3 else "")
-            add_svar5 = ctk.StringVar(value=split_line[7] if len(split_line) > 4 else "")
-            add_svar6 = ctk.StringVar(value=split_line[8] if len(split_line) > 5 else "")
+            add_svar0 = ctk.StringVar(value=split_line[0] if len(split_line) > 0 else "")
+            add_svar1 = ctk.StringVar(value=split_line[2] if len(split_line) > 1 else "")
+            add_svar2 = ctk.StringVar(value=split_line[4] if len(split_line) > 2 else "")
+            add_svar3 = ctk.StringVar(value=split_line[5] if len(split_line) > 3 else "")
+            add_svar4 = ctk.StringVar(value=split_line[7] if len(split_line) > 4 else "")
+            add_svar5 = ctk.StringVar(value=split_line[9] if len(split_line) > 5 else "")
+            add_svar6 = ctk.StringVar(value=split_line[10] if len(split_line) > 6 else "")
 
             entry_width = 250
 
-            left_labels = ["Name", "Username", "Password"]
-            left_vars = [add_svar1, add_svar2, add_svar3]
+            left_labels = ["Name", "Platform", "Username", "Password"]
+            left_vars = [add_svar0, add_svar1, add_svar2, add_svar3]
 
-            for i in range(3):
+            for i in range(4):
                 ctk.CTkLabel(self.add_frame, text=left_labels[i]).grid(row=i, column=0, sticky="e", padx=10, pady=5)
                 ctk.CTkEntry(self.add_frame, textvariable=left_vars[i], width=entry_width).grid(row=i, column=1, padx=5,
                                                                                                 pady=5, sticky="w")
@@ -273,18 +311,18 @@ class Application:
 
             submit_btn = ctk.CTkButton(
                 self.add_frame, text="Submit",
-                command=lambda: self.submit_modify_ui(
+                command=lambda: self.submit_modify_ui(add_svar0.get(),
                     add_svar1.get(), add_svar2.get(), add_svar3.get(),
                     add_svar4.get(), add_svar5.get(), add_svar6.get()
                 )
             )
-            submit_btn.grid(row=3, column=1, columnspan=2, pady=10, padx=100, sticky="e")
+            submit_btn.grid(row=4, column=1, columnspan=2, pady=10, padx=100, sticky="e")
 
             cancel_btn = ctk.CTkButton(self.add_frame, text="Cancel", command=self.cancel_modify_ui)
-            cancel_btn.grid(row=3, column=2, columnspan=2, pady=10, sticky="w")
+            cancel_btn.grid(row=4, column=2, columnspan=2, pady=10, sticky="w")
 
-    def submit_modify_ui(self, sv1, sv2, sv3, sv4, sv5, sv6):
-        if sv1 == "" or sv2 == "" or sv3 == "":
+    def submit_modify_ui(self, sv0,  sv1, sv2, sv3, sv4, sv5, sv6):
+        if sv0 == "" or sv1 == "" or sv2 == "" or sv3 == "":
             mb.showerror("Error", "Please enter all values")
             return
 
@@ -295,9 +333,9 @@ class Application:
             for line in lines:
                 if line.strip() == self.old_line:
                     if sv4 == "" or sv5 == "" or sv6 == "":
-                        file.write(f"{sv1} / {sv2} {sv3}{sv4}{sv5}{sv6}\n")
+                        file.write(f"{sv0} // {sv1} // {sv2} {sv3}{sv4}{sv5}{sv6}\n")
                     else:
-                        file.write(f"{sv1} / {sv2} {sv3} / {sv4} / {sv5} {sv6}\n")
+                        file.write(f"{sv0} // {sv1} // {sv2} {sv3} // {sv4} // {sv5} {sv6}\n")
                 else:
                     file.write(line)
 
@@ -326,7 +364,7 @@ class Application:
         add_amvar2 = ctk.StringVar()
         add_amvar3 = ctk.StringVar()
 
-        ctk.CTkLabel(self.add_frame, text="Add name").grid(row=0, column=0, sticky="e", padx=10, pady=5)
+        ctk.CTkLabel(self.add_frame, text="Add platform").grid(row=0, column=0, sticky="e", padx=10, pady=5)
         ctk.CTkLabel(self.add_frame, text="Add username").grid(row=1, column=0, sticky="e", padx=10, pady=5)
         ctk.CTkLabel(self.add_frame, text="Add password").grid(row=2, column=0, sticky="e", padx=10, pady=5)
 
@@ -359,7 +397,7 @@ class Application:
         with open(self.pass_file, "w") as file:
             for line in lines:
                 if line.strip() == self.old_line.strip():
-                    file.write(line.strip() + " / " + f"{amv1} / {amv2} {amv3}\n")
+                    file.write(line.strip() + " // " + f"{amv1} // {amv2} {amv3}\n")
                 else:
                     file.write(line)
 
