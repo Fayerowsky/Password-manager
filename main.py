@@ -6,7 +6,8 @@ import os
 import atexit
 
 #add register on first run
-#add simple pass_coding
+#add simple pass_coding  /ɖ/
+#add expand desc with title
 
 class Application:
     def __init__(self, root):
@@ -15,6 +16,7 @@ class Application:
         self.root.resizable(False, False)
         self.root.title("Password Manager")
         self.root.attributes("-topmost", True)
+        self.root.iconbitmap("image_files/app_ico.ico")
 
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
