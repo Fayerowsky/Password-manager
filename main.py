@@ -109,9 +109,13 @@ class Application:
                 min_height = 15
                 max_height = 106 if slash_count == 4 else 73
 
+                # Tworzymy tekst, który będzie wyświetlany w zwiniętym widoku (do pierwszego " // ")
+                display_text = line.split(" // ")[0] if slash_count > 0 else line.strip()
+
                 entry = ctk.CTkTextbox(entry_frame, font=("Arial", 16), text_color="white", width=375,
-                                       height=min_height, border_width=0, fg_color="transparent", yscrollcommand="", wrap=None)
-                entry.insert("0.0", line.strip().replace(" // ", "\n"))
+                                       height=min_height, border_width=0, fg_color="transparent", yscrollcommand="",
+                                       wrap="none")
+                entry.insert("0.0", display_text)
                 entry.configure(state="disabled")
                 entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
 
@@ -137,22 +141,34 @@ class Application:
                 expand_btn = ctk.CTkButton(entry_frame, text="", image=expand_icon, width=40, height=40,
                                            fg_color="transparent",
                                            command=lambda f=entry_frame, e=entry, mh=min_height,
-                                                          mxh=max_height: self.toggle_expand(f, e, mh, mxh))
+                                                          mxh=max_height, line=line: self.toggle_expand(f, e, mh, mxh,
+                                                                                                        line))
                 expand_btn.pack(side="right", padx=5, pady=5)
 
-                self.entries[entry_frame] = {"expanded": False, "min_h": min_height, "max_h": max_height}
+                # Przechowywanie pełnego tekstu i innych informacji w słowniku
+                self.entries[entry_frame] = {"expanded": False, "min_h": min_height, "max_h": max_height, "line": line}
 
                 add_more_btn.configure(state="disabled") if slash_count == 4 else add_more_btn.configure(state="normal")
 
         except FileNotFoundError:
             ctk.CTkLabel(self.main_frame, text="No saved passwords.").pack()
 
-    def toggle_expand(self, frame, entry, min_h, max_h):
+    def toggle_expand(self, frame, entry, min_h, max_h, line):
         expanded = self.entries[frame]["expanded"]
+
+        # Jeśli jest rozwinięte, wróć do wersji skróconej
         if expanded:
             target_height = min_h
+            display_text = line.split(" // ")[0] if line.count(" // ") > 0 else line.strip()
         else:
             target_height = max_h
+            display_text = line.strip().replace(" // ", "\n")  # Pokaż pełny tekst po rozwinięciu
+
+        entry.configure(state="normal")  # Włącz możliwość edycji tekstu
+        entry.delete("0.0", "end")  # Usuń istniejący tekst
+        entry.insert("0.0", display_text)  # Wstaw nowy tekst
+        entry.configure(state="disabled")  # Zablokuj edycję tekstu
+
         self.animate_height(frame, entry, frame.winfo_height(), target_height)
         self.entries[frame]["expanded"] = not expanded
 
@@ -233,7 +249,6 @@ class Application:
         self.add_btn.configure(state="normal")
 #modify_ui & service
     def create_modify_ui(self, old_line, l):
-        print(l)
         if l == 2:
             self.old_line = old_line
             self.add_frame = ctk.CTkFrame(self.root)
